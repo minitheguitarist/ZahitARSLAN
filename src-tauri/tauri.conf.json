@@ -32,7 +32,10 @@
       "icons/icon.ico"
     ],
     "windows": {
-      "webviewInstallMode": "downloadBootstrapper",
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper",
+        "silent": false
+      },
       "wix": {
         "language": "tr-TR"
       },
