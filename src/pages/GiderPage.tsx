@@ -156,7 +156,7 @@ export const GiderPage: React.FC = () => {
 
     if (view === 'period-select') {
         return (
-            <div className="max-w-4xl mx-auto animate-in fade-in">
+            <div className="w-full mx-auto animate-in fade-in">
                 <div className="flex items-center justify-between mb-8 glass-panel p-4 rounded-xl">
                     <button onClick={() => setYear(y => Math.max(2026, y - 1))} className={cn("p-2 rounded-lg hover:bg-white/10", year <= 2026 && "opacity-50 cursor-not-allowed")} disabled={year <= 2026}><ChevronLeft /></button>
                     <h2 className="text-3xl font-bold font-mono">{year}</h2>
@@ -188,7 +188,7 @@ export const GiderPage: React.FC = () => {
 
     if (view === 'categories') {
         return (
-            <div className="max-w-4xl mx-auto animate-in zoom-in-95 duration-300">
+            <div className="w-full mx-auto animate-in zoom-in-95 duration-300">
                 <div className="flex items-center gap-4 mb-8">
                     <button onClick={() => setView('period-select')} className="p-2 rounded-lg glass-button"><ArrowLeft /></button>
                     <h2 className="text-2xl font-bold text-slate-300">
@@ -228,7 +228,7 @@ export const GiderPage: React.FC = () => {
         const otherCategories = CATEGORIES.filter(c => c.id !== 'MARKET GİDERLERİ');
 
         return (
-            <div className="max-w-5xl mx-auto h-full flex flex-col animate-in slide-in-from-right-8">
+            <div className="w-full mx-auto h-full flex flex-col animate-in slide-in-from-right-8">
                 <div className="flex items-center justify-between mb-6 shrink-0">
                     <div className="flex items-center gap-4">
                         <button onClick={() => setView('categories')} className="p-2 rounded-lg glass-button"><ArrowLeft /></button>
@@ -350,7 +350,7 @@ export const GiderPage: React.FC = () => {
 
     // --- Expense List View (Generic for Elektrik, Su, etc) ---
     return (
-        <div className="max-w-5xl mx-auto h-full flex flex-col animate-in slide-in-from-right-8">
+        <div className="w-full mx-auto h-full flex flex-col animate-in slide-in-from-right-8">
             {/* Header */}
             <div className="flex items-center justify-between mb-6 shrink-0">
                 <div className="flex items-center gap-4">

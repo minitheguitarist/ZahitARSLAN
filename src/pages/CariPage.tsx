@@ -95,7 +95,7 @@ export const CariPage: React.FC = () => {
 
     // 2. Ekran: Veri Girişi
     return (
-        <div className="w-full max-w-5xl mx-auto p-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="w-full p-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Header */}
             <div className="flex items-center justify-between mb-8">
                 <button
