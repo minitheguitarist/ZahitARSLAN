@@ -44,6 +44,20 @@ export const BackupModal: React.FC<BackupModalProps> = ({ onClose }) => {
         }
     };
 
+    const handleCreateManualBackup = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const msg = await invoke<string>('create_manual_backup');
+            alert(msg);
+        } catch (err: any) {
+            console.error(err);
+            setError(typeof err === 'string' ? err : "Manuel yedekleme başarısız oldu.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in">
             <div className="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative">
@@ -64,29 +78,56 @@ export const BackupModal: React.FC<BackupModalProps> = ({ onClose }) => {
                     </div>
                 )}
 
-                <div
-                    className={cn(
-                        "border-2 border-dashed border-white/20 rounded-xl h-48 flex flex-col items-center justify-center gap-4 transition-all cursor-pointer hover:border-accent hover:bg-accent/5",
-                        loading && "opacity-50 pointer-events-none"
-                    )}
-                    onClick={handlePickFile}
-                >
-                    {loading ? (
-                        <div className="flex flex-col items-center gap-2 text-accent">
-                            <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin"></div>
-                            <span>Geri yükleniyor...</span>
-                        </div>
-                    ) : (
-                        <>
-                            <div className="p-4 rounded-full bg-slate-800 shadow-xl">
-                                <FileUp size={32} className="text-accent" />
+                <div className="grid grid-cols-2 gap-4">
+                    <div
+                        className={cn(
+                            "border-2 border-dashed border-white/20 rounded-xl h-48 flex flex-col items-center justify-center gap-4 transition-all cursor-pointer hover:border-emerald-500 hover:bg-emerald-500/5",
+                            loading && "opacity-50 pointer-events-none"
+                        )}
+                        onClick={handleCreateManualBackup}
+                    >
+                        {loading ? (
+                            <div className="flex flex-col items-center gap-2 text-emerald-400">
+                                <div className="w-8 h-8 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin"></div>
+                                <span>İşleniyor...</span>
                             </div>
-                            <div className="text-center">
-                                <p className="font-bold text-white text-lg">Dosya Seç</p>
-                                <p className="text-xs text-slate-500 mt-1">Yedek dosyasını (.db) seçmek için tıklayın</p>
+                        ) : (
+                            <>
+                                <div className="p-4 rounded-full bg-slate-800 shadow-xl">
+                                    <UploadCloud size={32} className="text-emerald-400" />
+                                </div>
+                                <div className="text-center">
+                                    <p className="font-bold text-white text-lg">Manuel Yedek Al</p>
+                                    <p className="text-xs text-slate-500 mt-1">Anlık yedek oluştur (manualbackups)</p>
+                                </div>
+                            </>
+                        )}
+                    </div>
+
+                    <div
+                        className={cn(
+                            "border-2 border-dashed border-white/20 rounded-xl h-48 flex flex-col items-center justify-center gap-4 transition-all cursor-pointer hover:border-accent hover:bg-accent/5",
+                            loading && "opacity-50 pointer-events-none"
+                        )}
+                        onClick={handlePickFile}
+                    >
+                        {loading ? (
+                            <div className="flex flex-col items-center gap-2 text-accent">
+                                <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin"></div>
+                                <span>Geri yükleniyor...</span>
                             </div>
-                        </>
-                    )}
+                        ) : (
+                            <>
+                                <div className="p-4 rounded-full bg-slate-800 shadow-xl">
+                                    <FileUp size={32} className="text-accent" />
+                                </div>
+                                <div className="text-center">
+                                    <p className="font-bold text-white text-lg">Yedekten Dön</p>
+                                    <p className="text-xs text-slate-500 mt-1">Yedek dosyasını (.db) seçmek için tıklayın</p>
+                                </div>
+                            </>
+                        )}
+                    </div>
                 </div>
 
                 <div className="mt-6 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl">

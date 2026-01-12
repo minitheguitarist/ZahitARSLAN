@@ -25,7 +25,7 @@ pub fn run() {
                 .build()
         )
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![greet, backup::restore_backup])
+        .invoke_handler(tauri::generate_handler![greet, backup::restore_backup, backup::create_manual_backup])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

@@ -22,6 +22,11 @@
     *   **Animasyonlar**: Akıcı geçişler ve etkileşimli öğelerle zenginleştirilmiş deneyim.
     *   **Tam Ekran**: Uygulama odaklanmayı artırmak için varsayılan olarak tam ekran başlar.
 
+*   **Güvenlik & Yedekleme**:
+    *   **Otomatik Yedekleme**: Uygulama her açılışta `backups` klasörüne otomatik yedek alır.
+    *   **Manuel Yedekleme**: Ayarlar menüsünden istediğiniz an `manualbackups` klasörüne anlık yedek alabilirsiniz.
+    *   **Kolay Geri Yükleme**: Herhangi bir yedek dosyasını (.db) seçerek verilerinizi saniyeler içinde geri yükleyebilirsiniz.
+
 ## 🛠️ Teknolojiler
 
 Bu proje, performans ve güvenlik odaklı en güncel teknolojiler kullanılarak geliştirilmiştir:

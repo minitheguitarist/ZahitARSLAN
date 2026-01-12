@@ -102,6 +102,11 @@ export async function updateExpensePaidStatus(id: number, is_paid: boolean): Pro
     await db.execute('UPDATE expenses SET is_paid = $1 WHERE id = $2', [is_paid ? 1 : 0, id]);
 }
 
+export async function updateExpenseAmount(id: number, amount: number): Promise<void> {
+    const db = await getDb();
+    await db.execute('UPDATE expenses SET amount = $1 WHERE id = $2', [amount, id]);
+}
+
 export async function deleteExpense(id: number): Promise<void> {
     const db = await getDb();
     await db.execute('DELETE FROM expenses WHERE id = $1', [id]);

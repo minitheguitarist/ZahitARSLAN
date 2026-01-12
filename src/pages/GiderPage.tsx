@@ -7,6 +7,7 @@ import {
     addExpense,
     deleteExpense,
     updateExpensePaidStatus,
+    updateExpenseAmount, // Import added
     getPeriodStatus,
     setPeriodStatus,
     getCategoryTotal
@@ -43,7 +44,9 @@ export const GiderPage: React.FC = () => {
 
     // Form State for Modal
     const [showModal, setShowModal] = useState(false);
+    const [deleteId, setDeleteId] = useState<number | null>(null);
     const [formData, setFormData] = useState<Partial<Expense>>({});
+    const [isPersistent, setIsPersistent] = useState(false); // New state for persistent add
 
     const periodStr = selectedMonth !== null ? `${year}-${String(selectedMonth + 1).padStart(2, '0')}` : '';
 
@@ -76,20 +79,22 @@ export const GiderPage: React.FC = () => {
         loadStatuses();
     }, [year]);
 
+    const loadTotals = async () => {
+        if (!periodStr) return;
+        const totals: Record<string, number> = {};
+        for (const cat of CATEGORIES) {
+            totals[cat.id] = await getCategoryTotal(periodStr, cat.id);
+        }
+        setCategoryTotals(totals);
+    };
+
     // View veya period değişince stateleri güncelle
     useEffect(() => {
         if (view === 'expense-list' || view === 'market-summary') {
             loadExpenses();
         }
         if (view === 'market-summary' && periodStr) {
-            // Load totals for all categories
-            (async () => {
-                const totals: Record<string, number> = {};
-                for (const cat of CATEGORIES) {
-                    totals[cat.id] = await getCategoryTotal(periodStr, cat.id);
-                }
-                setCategoryTotals(totals);
-            })();
+            loadTotals();
         }
         if (periodStr) {
             getPeriodStatus(periodStr).then(setPeriodStatusValue);
@@ -110,10 +115,16 @@ export const GiderPage: React.FC = () => {
         }
     };
 
-    const handleDelete = async (id: number) => {
-        if (confirm('Silmek istediğinize emin misiniz?')) {
-            await deleteExpense(id);
+    const handleDeleteClick = (id: number) => {
+        setDeleteId(id);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (deleteId) {
+            await deleteExpense(deleteId);
+            setDeleteId(null);
             loadExpenses();
+            loadTotals();
         }
     };
 
@@ -132,24 +143,60 @@ export const GiderPage: React.FC = () => {
         setPeriodStatusMap(prev => ({ ...prev, [periodStr]: newValue }));
     };
 
+    const handleAmountEdit = async (id: number, newAmount: number) => {
+        await updateExpenseAmount(id, newAmount);
+        loadExpenses();
+        loadTotals();
+    };
+
     const handleModalSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!periodStr || !selectedCategory) return;
 
-        const newExpense: Expense = {
-            period: periodStr,
+        const baseExpense = {
             category: selectedCategory,
             title: formData.title || '',
             number: formData.number,
-            amount: Number(formData.amount) || 0,
-            is_paid: formData.is_paid || false,
-            sub_category: formData.sub_category
+            sub_category: formData.sub_category,
+            is_paid: formData.is_paid || false
         };
 
-        await addExpense(newExpense);
+        if (isPersistent) {
+            // Add for all months in 2025-2030
+            const years = [2025, 2026, 2027, 2028, 2029, 2030];
+            const promises = [];
+
+            for (const y of years) {
+                for (let m = 1; m <= 12; m++) {
+                    const p = `${y}-${String(m).padStart(2, '0')}`;
+                    // Current period gets the entered amount, others get 0
+                    const amt = (p === periodStr) ? (Number(formData.amount) || 0) : 0;
+                    // Current period respects the form's is_paid checkbox, others are ALWAYS UPDAID (false)
+                    const paidStatus = (p === periodStr) ? (formData.is_paid || false) : false;
+
+                    promises.push(addExpense({
+                        ...baseExpense,
+                        period: p,
+                        amount: amt,
+                        is_paid: paidStatus
+                    } as Expense));
+                }
+            }
+            await Promise.all(promises);
+        } else {
+            // Single add
+            await addExpense({
+                ...baseExpense,
+                period: periodStr,
+                amount: Number(formData.amount) || 0
+            } as Expense);
+        }
+
         setShowModal(false);
         setFormData({});
+        setIsPersistent(false); // Reset
         loadExpenses();
+        loadTotals();
     };
 
     // --- Views ---
@@ -267,6 +314,13 @@ export const GiderPage: React.FC = () => {
                                 </span>
                             </div>
                         ))}
+                        {/* DİĞER (Market Giderleri) */}
+                        <div className="flex justify-between items-center p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                            <span className="text-sm font-bold text-emerald-400">DİĞER</span>
+                            <span className="text-white font-mono text-sm font-bold">
+                                {(categoryTotals['MARKET GİDERLERİ'] || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                            </span>
+                        </div>
 
                         <div className="mt-8 p-4 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
                             <div className="text-sm text-emerald-400 mb-1">Toplam Gider</div>
@@ -296,10 +350,24 @@ export const GiderPage: React.FC = () => {
                                     {expenses.map(item => (
                                         <tr key={item.id} className="hover:bg-white/5">
                                             <td className="p-3 text-center">
-                                                <button onClick={() => handleDelete(item.id!)} className="text-slate-500 hover:text-red-400"><Trash2 size={16} /></button>
+                                                <button onClick={() => handleDeleteClick(item.id!)} className="text-slate-500 hover:text-red-400"><Trash2 size={16} /></button>
                                             </td>
                                             <td className="p-3">{item.title}</td>
-                                            <td className="p-3 text-right font-mono">{item.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</td>
+                                            <td className="p-3 text-right font-mono">
+                                                <input
+                                                    type="number"
+                                                    step="0.01"
+                                                    className="bg-transparent text-right w-24 outline-none hover:bg-white/5 focus:bg-white/10 rounded px-1 transition-colors"
+                                                    defaultValue={item.amount}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Enter') {
+                                                            handleAmountEdit(item.id!, Number(e.currentTarget.value));
+                                                            e.currentTarget.blur();
+                                                        }
+                                                    }}
+                                                    onBlur={(e) => handleAmountEdit(item.id!, Number(e.currentTarget.value))}
+                                                />
+                                            </td>
                                             <td className="p-3 text-center">
                                                 <button onClick={() => handleTogglePaid(item.id!, item.is_paid)} className={cn("text-xs px-2 py-0.5 rounded cursor-pointer select-none ring-1 active:scale-95 transition-all", item.is_paid ? "text-emerald-400 bg-emerald-500/10 ring-emerald-500/50" : "text-red-400 bg-red-500/10 ring-red-500/50")}>
                                                     {item.is_paid ? 'Ödendi' : 'Ödenmedi'}
@@ -341,6 +409,33 @@ export const GiderPage: React.FC = () => {
                                     <button type="submit" className="flex-1 py-3 rounded-lg bg-accent text-white font-bold hover:bg-accent-hover">Ekle</button>
                                 </div>
                             </form>
+                        </div>
+                    </div>
+                )}
+                {/* Delete Confirmation Modal */}
+                {deleteId && (
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                        <div className="bg-slate-900 border border-red-500/30 rounded-2xl w-full max-w-sm p-6 shadow-2xl flex flex-col items-center text-center animate-in zoom-in-95">
+                            <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center mb-4 text-red-500">
+                                <Trash2 size={24} />
+                            </div>
+                            <h3 className="text-xl font-bold text-white mb-2">Silmek İstediğinize Emin misiniz?</h3>
+                            <p className="text-slate-400 text-sm mb-6">Bu işlem geri alınamaz. Bu kaydı kalıcı olarak silmek istiyor musunuz?</p>
+
+                            <div className="flex gap-3 w-full">
+                                <button
+                                    onClick={() => setDeleteId(null)}
+                                    className="flex-1 py-3 rounded-lg glass-button text-slate-300 hover:text-white"
+                                >
+                                    Hayır, İptal
+                                </button>
+                                <button
+                                    onClick={handleConfirmDelete}
+                                    className="flex-1 py-3 rounded-lg bg-red-500 text-white font-bold hover:bg-red-600 transition-colors shadow-lg shadow-red-900/20"
+                                >
+                                    Evet, Sil
+                                </button>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -394,13 +489,30 @@ export const GiderPage: React.FC = () => {
                             {expenses.map(item => (
                                 <tr key={item.id} className="hover:bg-white/5 transition-colors">
                                     <td className="p-4 text-center">
-                                        <button onClick={() => handleDelete(item.id!)} className="text-slate-500 hover:text-red-400 transition-colors">
+                                        <button onClick={() => handleDeleteClick(item.id!)} className="text-slate-500 hover:text-red-400 transition-colors">
                                             <Trash2 size={18} />
                                         </button>
                                     </td>
                                     <td className="p-4 font-medium">{item.title}</td>
                                     {selectedCategory !== 'BAĞKUR' && <td className="p-4 font-mono text-slate-400 text-sm">{item.number}</td>}
-                                    <td className="p-4 text-right font-mono text-lg">{item.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</td>
+                                    <td className="p-4 text-right font-mono text-lg">
+                                        <div className="flex justify-end items-center gap-1">
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                className="bg-transparent text-right w-32 outline-none border-b border-transparent hover:border-white/20 focus:border-accent focus:bg-white/5 rounded-t px-2 py-1 transition-all"
+                                                defaultValue={item.amount}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') {
+                                                        handleAmountEdit(item.id!, Number(e.currentTarget.value));
+                                                        e.currentTarget.blur();
+                                                    }
+                                                }}
+                                                onBlur={(e) => handleAmountEdit(item.id!, Number(e.currentTarget.value))}
+                                            />
+                                            <span className="text-slate-500 text-sm">₺</span>
+                                        </div>
+                                    </td>
                                     <td className="p-4 text-center">
                                         <button
                                             onClick={() => handleTogglePaid(item.id!, item.is_paid)}
@@ -450,6 +562,16 @@ export const GiderPage: React.FC = () => {
                                 <input required type="number" step="0.01" className="w-full glass-input p-3 rounded-lg font-mono" value={formData.amount || ''} onChange={e => setFormData({ ...formData, amount: Number(e.target.value) })} />
                             </div>
 
+                            <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/5 cursor-pointer" onClick={() => setIsPersistent(!isPersistent)}>
+                                <div className={cn("w-5 h-5 rounded border flex items-center justify-center transition-colors", isPersistent ? "bg-purple-500 border-purple-500" : "border-slate-500")}>
+                                    {isPersistent && <CheckCircle size={14} className="text-white" />}
+                                </div>
+                                <div>
+                                    <span className="text-sm select-none block font-medium text-white">Kalıcı Olarak Ekle</span>
+                                    <span className="text-xs text-slate-400 block">2025-2030 tüm aylara eklenir (Diğer aylarda 0 TL)</span>
+                                </div>
+                            </div>
+
                             <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/5 cursor-pointer" onClick={() => setFormData({ ...formData, is_paid: !formData.is_paid })}>
                                 <div className={cn("w-5 h-5 rounded border flex items-center justify-center transition-colors", formData.is_paid ? "bg-accent border-accent" : "border-slate-500")}>
                                     {formData.is_paid && <CheckCircle size={14} className="text-white" />}
@@ -465,6 +587,36 @@ export const GiderPage: React.FC = () => {
                     </div>
                 </div>
             )}
-        </div>
+
+            {/* Delete Confirmation Modal */}
+            {
+                deleteId && (
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                        <div className="bg-slate-900 border border-red-500/30 rounded-2xl w-full max-w-sm p-6 shadow-2xl flex flex-col items-center text-center animate-in zoom-in-95">
+                            <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center mb-4 text-red-500">
+                                <Trash2 size={24} />
+                            </div>
+                            <h3 className="text-xl font-bold text-white mb-2">Silmek İstediğinize Emin misiniz?</h3>
+                            <p className="text-slate-400 text-sm mb-6">Bu işlem geri alınamaz. Bu kaydı kalıcı olarak silmek istiyor musunuz?</p>
+
+                            <div className="flex gap-3 w-full">
+                                <button
+                                    onClick={() => setDeleteId(null)}
+                                    className="flex-1 py-3 rounded-lg glass-button text-slate-300 hover:text-white"
+                                >
+                                    Hayır, İptal
+                                </button>
+                                <button
+                                    onClick={handleConfirmDelete}
+                                    className="flex-1 py-3 rounded-lg bg-red-500 text-white font-bold hover:bg-red-600 transition-colors shadow-lg shadow-red-900/20"
+                                >
+                                    Evet, Sil
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+        </div >
     );
 };

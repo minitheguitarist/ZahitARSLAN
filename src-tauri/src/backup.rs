@@ -61,3 +61,27 @@ pub async fn restore_backup(app: AppHandle, file_path: String) -> Result<(), Str
         Err(e) => Err(format!("Yedek geri yüklenirken hata oluştu: {}", e))
     }
 }
+
+/// Manuel yedekleme komutu
+#[tauri::command]
+pub async fn create_manual_backup(app: AppHandle) -> Result<String, String> {
+    let app_data_dir = app.path().app_data_dir().map_err(|e| e.to_string())?;
+    let db_path = app_data_dir.join(DB_NAME);
+
+    if !db_path.exists() {
+        return Err("Veritabanı bulunamadı.".to_string());
+    }
+
+    let manual_backups_dir = app_data_dir.join("manualbackups");
+    if !manual_backups_dir.exists() {
+        fs::create_dir_all(&manual_backups_dir).map_err(|e| e.to_string())?;
+    }
+
+    let now = chrono::Local::now().format("%Y-%m-%d-%H-%M-%S").to_string();
+    let backup_filename = format!("manuel-{}.db", now);
+    let backup_path = manual_backups_dir.join(&backup_filename);
+
+    fs::copy(&db_path, &backup_path).map_err(|e| format!("Kopyalama hatası: {}", e))?;
+
+    Ok(format!("Yedek başarıyla alındı: {}", backup_filename))
+}
