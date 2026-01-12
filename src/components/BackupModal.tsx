@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import { getCurrentWebview } from '@tauri-apps/api/webview';
 import { X, UploadCloud, AlertTriangle, FileUp } from 'lucide-react';
 import { cn } from '../lib/utils';
 
@@ -9,20 +8,9 @@ interface BackupModalProps {
 }
 
 export const BackupModal: React.FC<BackupModalProps> = ({ onClose }) => {
-    const [isDragging, setIsDragging] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const handleDragOver = (e: React.DragEvent) => {
-        e.preventDefault();
-        setIsDragging(true);
-    };
-
-    const handleDragLeave = () => {
-        setIsDragging(false);
-    };
-
-    // Alternative: Use Dialog Open
     const handlePickFile = async () => {
         // Dynamic import
         const { open } = await import('@tauri-apps/plugin-dialog');
@@ -36,30 +24,9 @@ export const BackupModal: React.FC<BackupModalProps> = ({ onClose }) => {
 
         if (file) {
             // file is path string or null
-            restore(file);
+            restore(file as string);
         }
     };
-
-    // Listen for file drop
-    React.useEffect(() => {
-        const unlisten = getCurrentWebview().onDragDropEvent((event) => {
-            if (event.payload.type === 'drop') {
-                const paths = event.payload.paths;
-                if (paths.length > 0) {
-                    const path = paths[0];
-                    if (path.endsWith('.db')) {
-                        restore(path);
-                    } else {
-                        setError("Lütfen geçerli bir .db uzantılı yedek dosyası seçin.");
-                    }
-                }
-            }
-        });
-
-        return () => {
-            unlisten.then(f => f());
-        };
-    }, []);
 
     const restore = async (path: string) => {
         if (!confirm("DİKKAT! Bu işlem mevcut verilerinizi silecek ve seçtiğiniz yedeğe geri dönecektir. Emin misiniz?")) return;
@@ -87,7 +54,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({ onClose }) => {
                     Yedekten Geri Yükle
                 </h2>
                 <p className="text-slate-400 text-sm mb-6">
-                    Bilgisayarınızdaki <code>backups</code> klasöründeki bir yedek dosyasını (.db) aşağıya sürükleyin veya seçin.
+                    Bilgisayarınızdaki <code>backups</code> klasöründen bir yedek dosyası (.db) seçin.
                 </p>
 
                 {error && (
@@ -99,13 +66,10 @@ export const BackupModal: React.FC<BackupModalProps> = ({ onClose }) => {
 
                 <div
                     className={cn(
-                        "border-2 border-dashed rounded-xl h-48 flex flex-col items-center justify-center gap-4 transition-all cursor-pointer",
-                        isDragging ? "border-accent bg-accent/10 scale-105" : "border-white/20 hover:border-white/40 hover:bg-white/5",
+                        "border-2 border-dashed border-white/20 rounded-xl h-48 flex flex-col items-center justify-center gap-4 transition-all cursor-pointer hover:border-accent hover:bg-accent/5",
                         loading && "opacity-50 pointer-events-none"
                     )}
                     onClick={handlePickFile}
-                    onDragOver={handleDragOver}
-                    onDragLeave={handleDragLeave}
                 >
                     {loading ? (
                         <div className="flex flex-col items-center gap-2 text-accent">
@@ -114,12 +78,12 @@ export const BackupModal: React.FC<BackupModalProps> = ({ onClose }) => {
                         </div>
                     ) : (
                         <>
-                            <div className="p-4 rounded-full bg-slate-800">
-                                <FileUp size={32} className="text-slate-400" />
+                            <div className="p-4 rounded-full bg-slate-800 shadow-xl">
+                                <FileUp size={32} className="text-accent" />
                             </div>
                             <div className="text-center">
-                                <p className="font-medium text-white">Dosyayı Buraya Sürükleyin</p>
-                                <p className="text-xs text-slate-500 mt-1">veya tıklayarak seçin</p>
+                                <p className="font-bold text-white text-lg">Dosya Seç</p>
+                                <p className="text-xs text-slate-500 mt-1">Yedek dosyasını (.db) seçmek için tıklayın</p>
                             </div>
                         </>
                     )}
@@ -131,7 +95,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({ onClose }) => {
                         Önemli Uyarı
                     </h4>
                     <p className="text-xs text-yellow-200/80">
-                        Geri yükleme işlemi, mevcut "market.db" dosyanızı ".old" uzantısıyla yedekler ancak veritabanını tamamen seçtiğiniz dosya ile değiştirir. Lütfen dikkatli olun.
+                        Geri yükleme işlemi, mevcut veritabanınızı seçtiğiniz yedek dosyasıyla değiştirir. Bu işlem geri alınamaz (eski verileriniz .old olarak yedeklense de dikkatli olun).
                     </p>
                 </div>
 
