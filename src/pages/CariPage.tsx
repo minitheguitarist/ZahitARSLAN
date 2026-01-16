@@ -112,49 +112,10 @@ export const CariPage: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Kutu 1: ANA KASA */}
+                {/* Kutu 1: BİLGİSAYAR */}
                 <div className="glass-panel p-6 rounded-2xl flex flex-col gap-4 relative overflow-hidden group">
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                         <span className="text-6xl font-black text-white">1</span>
-                    </div>
-                    <h3 className="text-xl font-bold text-center border-b border-white/10 pb-2 text-rose-300">ANA KASA</h3>
-
-                    <div className="space-y-1">
-                        <label className="text-sm text-slate-400 ml-1">Nakit</label>
-                        <input
-                            type="number"
-                            value={data.ana_kasa_nakit || ''}
-                            onChange={(e) => handleInputChange('ana_kasa_nakit', e.target.value)}
-                            className="w-full p-3 rounded-lg glass-input text-lg font-mono"
-                            placeholder="0.00"
-                            onFocus={(e) => e.target.select()}
-                        />
-                    </div>
-
-                    <div className="space-y-1">
-                        <label className="text-sm text-slate-400 ml-1">Visa</label>
-                        <input
-                            type="number"
-                            value={data.ana_kasa_visa || ''}
-                            onChange={(e) => handleInputChange('ana_kasa_visa', e.target.value)}
-                            className="w-full p-3 rounded-lg glass-input text-lg font-mono"
-                            placeholder="0.00"
-                            onFocus={(e) => e.target.select()}
-                        />
-                    </div>
-
-                    <div className="mt-auto pt-4 border-t border-white/10">
-                        <div className="flex justify-between items-center">
-                            <span className="text-slate-400">Toplam</span>
-                            <span className="text-2xl font-bold font-mono text-white">{anaKasaToplam.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</span>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Kutu 2: BİLGİSAYAR */}
-                <div className="glass-panel p-6 rounded-2xl flex flex-col gap-4 relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <span className="text-6xl font-black text-white">2</span>
                     </div>
                     <h3 className="text-xl font-bold text-center border-b border-white/10 pb-2 text-blue-300">BİLGİSAYAR</h3>
 
@@ -186,6 +147,45 @@ export const CariPage: React.FC = () => {
                         <div className="flex justify-between items-center">
                             <span className="text-slate-400">Toplam</span>
                             <span className="text-2xl font-bold font-mono text-white">{pcToplam.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Kutu 2: ANA KASA */}
+                <div className="glass-panel p-6 rounded-2xl flex flex-col gap-4 relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <span className="text-6xl font-black text-white">2</span>
+                    </div>
+                    <h3 className="text-xl font-bold text-center border-b border-white/10 pb-2 text-rose-300">ANA KASA</h3>
+
+                    <div className="space-y-1">
+                        <label className="text-sm text-slate-400 ml-1">Nakit</label>
+                        <input
+                            type="number"
+                            value={data.ana_kasa_nakit || ''}
+                            onChange={(e) => handleInputChange('ana_kasa_nakit', e.target.value)}
+                            className="w-full p-3 rounded-lg glass-input text-lg font-mono"
+                            placeholder="0.00"
+                            onFocus={(e) => e.target.select()}
+                        />
+                    </div>
+
+                    <div className="space-y-1">
+                        <label className="text-sm text-slate-400 ml-1">Visa</label>
+                        <input
+                            type="number"
+                            value={data.ana_kasa_visa || ''}
+                            onChange={(e) => handleInputChange('ana_kasa_visa', e.target.value)}
+                            className="w-full p-3 rounded-lg glass-input text-lg font-mono"
+                            placeholder="0.00"
+                            onFocus={(e) => e.target.select()}
+                        />
+                    </div>
+
+                    <div className="mt-auto pt-4 border-t border-white/10">
+                        <div className="flex justify-between items-center">
+                            <span className="text-slate-400">Toplam</span>
+                            <span className="text-2xl font-bold font-mono text-white">{anaKasaToplam.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</span>
                         </div>
                     </div>
                 </div>
