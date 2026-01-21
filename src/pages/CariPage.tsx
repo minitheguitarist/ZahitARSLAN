@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { CalendarView } from '../components/CalendarView';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import { getDailyRecord, saveDailyRecord, DailyRecord } from '../lib/db';
+import { cn } from '../lib/utils';
 
 export const CariPage: React.FC = () => {
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -17,7 +18,7 @@ export const CariPage: React.FC = () => {
     // Toplam hesaplamaları
     const anaKasaToplam = (data.ana_kasa_nakit || 0) + (data.ana_kasa_visa || 0);
     const pcToplam = (data.pc_nakit || 0) + (data.pc_visa || 0);
-    const fark = pcToplam - anaKasaToplam;
+    const fark = anaKasaToplam - pcToplam;
 
     // Tarih seçilince veriyi veritabanından çek
     useEffect(() => {
@@ -209,12 +210,22 @@ export const CariPage: React.FC = () => {
                     </div>
 
                     <div className="flex-1 flex items-center justify-center py-6">
-                        <div className={`text-center p-4 rounded-xl w-full transition-all duration-500 ${fark >= 0 ? 'bg-emerald-500/20 border border-emerald-500/30' : 'bg-red-500/20 border border-red-500/30'}`}>
+                        <div className={cn(
+                            "text-center p-4 rounded-xl w-full transition-all duration-500 border",
+                            fark > 0 ? "bg-emerald-500/20 border-emerald-500/30" :
+                                fark < 0 ? "bg-red-500/20 border-red-500/30" :
+                                    "bg-slate-500/20 border-slate-500/30"
+                        )}>
                             <div className="text-sm font-medium mb-1 opacity-80">
-                                {fark >= 0 ? 'FAZLA' : 'AÇIK'}
+                                {fark > 0 ? 'FAZLALIK' : fark < 0 ? 'AÇIK' : 'NÖTR'}
                             </div>
-                            <div className={`text-3xl font-black font-mono ${fark >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                                {fark >= 0 ? '+' : ''}{fark.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                            <div className={cn(
+                                "text-3xl font-black font-mono",
+                                fark > 0 ? "text-emerald-400" :
+                                    fark < 0 ? "text-red-400" :
+                                        "text-slate-400"
+                            )}>
+                                {fark > 0 ? '+' : ''}{fark.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
                             </div>
                         </div>
                     </div>
